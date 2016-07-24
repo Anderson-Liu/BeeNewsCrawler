@@ -1,0 +1,12 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="BeeNewsCrawler:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/BeeNewsCrawler_jar</output-path>
+    <root id="archive" name="BeeNewsCrawler.jar">
+      <element id="module-output" name="BeeNewsCrawler" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/libs/jsoup-1.9.2.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/libs/okio-1.9.0.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/libs/okhttp-2.7.0.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/libs/mongo-java-driver-2.13.3.jar" path-in-jar="/" />
+    </root>
+  </artifact>
+</component>

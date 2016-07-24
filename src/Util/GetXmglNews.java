@@ -13,6 +13,7 @@ import org.jsoup.select.Elements;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -151,7 +152,8 @@ public class GetXmglNews {
             pubTime = " ";
         }
         String title = docDetail.getElementById("zmTitle").text();
-        int readTimes = 0;
+        Random random = new Random();
+        int readTimes = random.nextInt(200);
 
         Elements imageElements = docDetail.select("img");
         String imageUrl;

@@ -8,8 +8,6 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="jsoup-1.9.2" level="project" />
-    <orderEntry type="library" name="okhttp-3.4.1" level="project" />
-    <orderEntry type="library" name="httpclient-4.5.2" level="project" />
     <orderEntry type="library" name="okhttp-2.7.0" level="project" />
     <orderEntry type="library" name="okio-1.9.0" level="project" />
     <orderEntry type="library" name="mongo-java-driver-2.13.3" level="project" />
