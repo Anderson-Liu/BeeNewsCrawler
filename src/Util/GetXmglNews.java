@@ -10,7 +10,6 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -157,26 +156,28 @@ public class GetXmglNews {
         int readTimes = random.nextInt(200);
 
         Elements imageElements = docDetail.select("img");
-        String imageUrl;
         String[] imageUrls;
+        String imageUri;
         List<String> imageUrlList = new ArrayList<>();
-        String urlPrefix = "http://xmgl.ahau.edu.cn/";
 
         for (Element imageElement : imageElements) {
             String[] tmp = imageElement.attr("src").split("/");
-            imageUrl = tmp[1] + "/" + tmp[2];
-            imageUrl = urlPrefix + imageUrl;
+            // 只存储图片名，URL前缀可以灵活改变为源站或CDN
+            imageUri = tmp[2];
             Pattern pattern = Pattern.compile("\\d+");
             Matcher matcher = pattern.matcher(tmp[2]);
             while (matcher.find()) {
                 post_id = Integer.parseInt(matcher.group(0));
             }
-            imageUrlList.add(imageUrl);
+            imageUrlList.add(imageUri);
         }
+
 
         int size = imageUrlList.size();
         imageUrls = imageUrlList.toArray(new String[size]);
 
+        /*
+        // Download picture
         String outputFolder = "/home/anderson/Pictures/BeeNews/";
         String name = String.valueOf(post_id) + ".jpg";
         if (imageUrls.length > 0) {
@@ -194,11 +195,11 @@ public class GetXmglNews {
                 }
             }
         }
-
-
+        */
 
         String contentElem = docDetail.getElementById("zmShow").text();
         String content, summary;
+        // 如果内容为空，不提取summary
         if (contentElem.isEmpty()) {
             return new SimpleArticleItem(post_id, imageUrls, title, pubTime, readTimes, type);
         } else {
@@ -244,16 +245,16 @@ public class GetXmglNews {
         int readTimes = 0;
 
         Elements imageElements = docDetail.select("img");
-        String imageUrl;
+        String imageUri;
         String[] imageUrls;
         List<String> imageUrlList = new ArrayList<>();
         String imgUrlPrefix = "http://xmgl.ahau.edu.cn/";
 
         for (Element imageElement : imageElements) {
             String[] tmp = imageElement.attr("src").split("/");
-            imageUrl = tmp[1] + "/" + tmp[2];
-            imageUrl = imgUrlPrefix + imageUrl;
-            imageUrlList.add(imageUrl);
+            // 只存储图片名，URL前缀可以灵活改变为源站或CDN
+            imageUri = tmp[2];
+            imageUrlList.add(imageUri);
         }
 
         int size = imageUrlList.size();

@@ -1,10 +1,12 @@
 import Model.ArticleItem;
 import Model.SimpleArticleItem;
 import Util.GetXmglNews;
+import Util.QiNiuUpload;
 import com.mongodb.*;
 import com.squareup.okhttp.OkHttpClient;
 import org.jsoup.select.Elements;
 
+import java.io.IOException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -17,6 +19,12 @@ import java.util.NoSuchElementException;
  */
 public class BeeNews {
     public static void main(String[] args) throws UnknownHostException {
+
+        try {
+            new QiNiuUpload().upload();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
         List<Integer> types = new ArrayList<Integer>() {{
             add(1);
@@ -34,7 +42,7 @@ public class BeeNews {
         BasicDBObject doc;
 
         // String hostName = "localhost";
-        String hostName = "localhost";
+        String hostName = "xxxx";
         int port = 27017;
         String dbName = "BeeNews";
         String sampCollectName = "SimpleArticle";
@@ -45,9 +53,8 @@ public class BeeNews {
             add(false);
         }};
 
-        String userName = "XXXX";
-        char[] password = "XXXX".toCharArray();
-
+        String userName = "xxxx";
+        char[] password = "xxxx".toCharArray();
 
         MongoCredential credential = MongoCredential.createCredential(userName, dbName, password);
         sampMongoClient = new MongoClient(new ServerAddress(hostName, port), Arrays.asList(credential));
@@ -89,7 +96,10 @@ public class BeeNews {
                                     .append("readTime", item.getReadTimes())
                                     .append("publishDate", item.getPublishDate())
                                     .append("summary", item.getSummary())
-                                    .append("imageUrls", item.getImageUrls());
+                                    .append("imageUrls", Arrays
+                                            .toString(item.getImageUrls())
+                                            .replace("[", "")
+                                            .replace("]", ""));
 
                             sampleColl.insert(doc);
                             System.out.println(doc);
@@ -111,9 +121,12 @@ public class BeeNews {
                                     .append("title", item.getTitle())
                                     .append("readTime", item.getReadTimes())
                                     .append("publishDate", item.getPublishDate())
-                                    .append("imageUrls", item.getImageUrls())
                                     .append("source", item.getSource())
-                                    .append("content", item.getBody());
+                                    .append("content", item.getBody())
+                                    .append("imageUrls", Arrays
+                                            .toString(item.getImageUrls())
+                                            .replace("[", "")
+                                            .replace("]", ""));
 
                             fullColl.insert(doc);
                             System.out.println(doc);
