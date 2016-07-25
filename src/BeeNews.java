@@ -7,6 +7,7 @@ import org.jsoup.select.Elements;
 
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.NoSuchElementException;
 
@@ -32,6 +33,7 @@ public class BeeNews {
         DBCollection fullColl;
         BasicDBObject doc;
 
+        // String hostName = "localhost";
         String hostName = "localhost";
         int port = 27017;
         String dbName = "BeeNews";
@@ -43,8 +45,14 @@ public class BeeNews {
             add(false);
         }};
 
+        String userName = "XXXX";
+        char[] password = "XXXX".toCharArray();
+
+
+        MongoCredential credential = MongoCredential.createCredential(userName, dbName, password);
+        sampMongoClient = new MongoClient(new ServerAddress(hostName, port), Arrays.asList(credential));
+
         // Connect to mongo DB.
-        sampMongoClient = new MongoClient(hostName, port);
         sampDB = sampMongoClient.getDB(dbName);
         sampleColl = sampDB.getCollection(sampCollectName);
         fullColl = sampDB.getCollection(fullCollectName);

@@ -10,6 +10,7 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -175,6 +176,26 @@ public class GetXmglNews {
 
         int size = imageUrlList.size();
         imageUrls = imageUrlList.toArray(new String[size]);
+
+        String outputFolder = "/home/anderson/Pictures/BeeNews/";
+        String name = String.valueOf(post_id) + ".jpg";
+        if (imageUrls.length > 0) {
+            for (String imgUrl : imageUrlList) {
+                //Open a URL Stream
+                org.jsoup.Connection.Response resultImageResponse = null;
+                try {
+                    resultImageResponse = Jsoup.connect(imgUrl).ignoreContentType(true).execute();
+                    // output here
+                    FileOutputStream out = (new FileOutputStream(new java.io.File(outputFolder + name)));
+                    out.write(resultImageResponse.bodyAsBytes());  // resultImageResponse.body() is where the image's contents are.
+                    out.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+
 
         String contentElem = docDetail.getElementById("zmShow").text();
         String content, summary;
