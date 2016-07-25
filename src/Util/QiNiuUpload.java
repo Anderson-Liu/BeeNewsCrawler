@@ -21,7 +21,7 @@ public class QiNiuUpload {
 
     //简单上传，使用默认策略，只需要设置上传的空间名就可以了
     public String getUpToken() {
-        return auth.uploadToken(Constant.bucketname);
+        return auth.uploadToken(Constant.BUCKETNAME);
     }
 
     public void upload(String filePath, String key) throws IOException {

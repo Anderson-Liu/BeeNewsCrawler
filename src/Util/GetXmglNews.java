@@ -26,7 +26,7 @@ public class GetXmglNews {
     public static Elements getTables(OkHttpClient client) {
 
         // get index page
-        String url = Constant.souceSite;
+        String url = Constant.SOUCE_SITE;
         Elements table = null;
 
         Request request
@@ -88,7 +88,7 @@ public class GetXmglNews {
         Elements urls = list.getElementsByAttribute("href");
         String url;
         List objList = new ArrayList();
-        String url_prefix = Constant.souceSite;
+        String url_prefix = Constant.SOUCE_SITE;
         int post_id;
 
         // 如果isFull为假,获取SimpleArticle对象
@@ -179,8 +179,8 @@ public class GetXmglNews {
         imageUrls = imageUrlList.toArray(new String[size]);
 
         // Upload picture to QiNiu Cloud
-        String outputFolder = Constant.imgStorePath;
-        String urlPreFix = Constant.imgGetUrlPrefix;
+        String outputFolder = Constant.IMG_STORE_PATH;
+        String urlPreFix = Constant.IMG_GET_URL_PREFIX;
         if (imageUrls.length > 0) {
             org.jsoup.Connection.Response resultImageResponse = null;
             for (String imgUri : imageUrlList) {

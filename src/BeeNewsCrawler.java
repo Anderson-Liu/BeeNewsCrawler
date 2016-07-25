@@ -2,15 +2,23 @@ import Model.ArticleItem;
 import Model.SimpleArticleItem;
 import Util.Constant;
 import Util.GetXmglNews;
-import com.mongodb.*;
+import com.mongodb.MongoClient;
+import com.mongodb.MongoCredential;
+import com.mongodb.ServerAddress;
+import com.mongodb.WriteConcern;
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoDatabase;
 import com.squareup.okhttp.OkHttpClient;
+import org.bson.Document;
 import org.jsoup.select.Elements;
 
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.NoSuchElementException;
+
+import static com.mongodb.client.model.Projections.excludeId;
+import static com.mongodb.client.model.Sorts.descending;
 
 
 /**
@@ -27,34 +35,28 @@ public class BeeNewsCrawler {
         }};
 
         MongoClient sampMongoClient;
-        DB sampDB;
+        MongoDatabase sampDB;
         // 简单表和完整表
         // 分别用于展示新闻列表和新闻详情
-        DBCollection sampleColl;
-        DBCollection fullColl;
-        BasicDBObject doc;
+        MongoCollection<Document> sampleColl;
+        MongoCollection<Document> fullColl;
+        MongoCollection<Document> imgColl;
+        Document doc;
 
-        String hostName = Constant.mongoHost;
-        int port = Constant.mongoPort;
-        String dbName = Constant.mongoDB;
-        String sampCollectName = Constant.sampCollection;
-        String fullCollectName = Constant.fullCollection;
         WriteConcern writeConcern = WriteConcern.JOURNALED;
         List<Boolean> isFull = new ArrayList<Boolean>() {{
             add(true);
             add(false);
         }};
 
-        String userName = Constant.mongoUser;
-        char[] password = Constant.mongoPass;
-
-        MongoCredential credential = MongoCredential.createCredential(userName, dbName, password);
-        sampMongoClient = new MongoClient(new ServerAddress(hostName, port), Arrays.asList(credential));
+        MongoCredential credential = MongoCredential.createCredential(Constant.MONGO_USER, Constant.MONGO_DB, Constant.MONGO_PASS);
+        sampMongoClient = new MongoClient(new ServerAddress(Constant.MONGO_HOST, Constant.MONGO_PORT), Arrays.asList(credential));
 
         // Connect to mongo DB.
-        sampDB = sampMongoClient.getDB(dbName);
-        sampleColl = sampDB.getCollection(sampCollectName);
-        fullColl = sampDB.getCollection(fullCollectName);
+        sampDB = sampMongoClient.getDatabase(Constant.MONGO_DB);
+        sampleColl = sampDB.getCollection(Constant.SAMP_COLLECTION);
+        fullColl = sampDB.getCollection(Constant.FULL_COLLECTION);
+        imgColl = sampDB.getCollection(Constant.IMG_COLLECTION);
 
         sampMongoClient.setWriteConcern(writeConcern);
 
@@ -73,8 +75,8 @@ public class BeeNewsCrawler {
                     if (!bool) {
                         List<SimpleArticleItem> list = GetXmglNews.getTargetList(type, table, client, bool);
                         for (SimpleArticleItem item : list) {
-                            BasicDBObject query = new BasicDBObject("title", item.getTitle());
-                            BasicDBObject oriDocument = (BasicDBObject) sampleColl.findOne(query);
+                            Document query = new Document("title", item.getTitle());
+                            Document oriDocument = fullColl.find(query).first();
                             if (null == oriDocument) {
                                 System.out.println("找不到图片对应的文章, 图片标题：" + item.getTitle());
                                 continue;
@@ -82,21 +84,23 @@ public class BeeNewsCrawler {
 
                             // 新文档保留旧文档的aid, type, readTime, publishDate, summary
                             // 只更新tile, imageUrls
-                            BasicDBObject modifDocument = new BasicDBObject
-                                    ("aid", oriDocument.getInt("aid"))
-                                    .append("type", oriDocument.getInt("type"))
+                            Document modifDocument = new Document
+                                    ("aid", oriDocument.getInteger("aid"))
+                                    .append("type", oriDocument.getInteger("type"))
                                     .append("title", item.getTitle())
-                                    .append("readTime", oriDocument.getInt("readTime"))
+                                    .append("readTime", oriDocument.getInteger("readTime"))
                                     .append("publishDate", oriDocument.getDate("publishDate"))
                                     .append("summary", oriDocument.getString("summary"))
                                     .append("imageUrls", item.getImageUrls());
-                            sampleColl.update(oriDocument, modifDocument);
+                            fullColl.replaceOne(new Document("title", item.getTitle()), modifDocument);
+                            // 将图片集中拷贝进另一张表里，方便
+                            imgColl.insertOne(new Document("imageUrls", item.getImageUrls()));
                         }
                     } else {
                         List<ArticleItem> list = GetXmglNews.getTargetList(type, table, client, bool);
                         for (ArticleItem item : list) {
-                            BasicDBObject query = new BasicDBObject("title", item.getTitle());
-                            BasicDBObject oriDocument = (BasicDBObject) fullColl.findOne(query);
+                            Document query = new Document("title", item.getTitle());
+                            Document oriDocument = fullColl.find(query).projection(excludeId()).first();
                             if (null == oriDocument) {
                                 System.out.println("找不到图片对应的文章, 图片标题：" + item.getTitle());
                                 continue;
@@ -105,17 +109,17 @@ public class BeeNewsCrawler {
                             // 新文档保留旧文档的aid, type, readTime, publishDate, source, content
                             // 只更新tile, imageUrls
                             try {
-                                BasicDBObject modifDocument = new BasicDBObject
-                                        ("aid", oriDocument.getInt("aid"))
-                                        .append("type", oriDocument.getInt("type"))
+                                Document modifDocument = new Document()
+                                        .append("aid", oriDocument.getInteger("aid"))
+                                        .append("type", oriDocument.getInteger("type"))
                                         .append("title", item.getTitle())
-                                        .append("readTime", oriDocument.getInt("readTime"))
+                                        .append("readTime", oriDocument.getInteger("readTime"))
                                         .append("publishDate", oriDocument.getDate("publishDate"))
                                         .append("source", oriDocument.getString("Source"))
                                         .append("content", oriDocument.getString("content"))
                                         .append("imageUrls", item.getImageUrls());
 
-                                fullColl.update(oriDocument, modifDocument);
+                                fullColl.replaceOne(new Document("title", item.getTitle()), modifDocument);
                             } catch (NullPointerException e) {
                                 e.printStackTrace();
                             }
@@ -124,23 +128,20 @@ public class BeeNewsCrawler {
 
                 } else {
 
-                    BasicDBObject query = new BasicDBObject("type", type);
-                    BasicDBObject sortRe = new BasicDBObject("aid", -1);
                     int maxId;
-
                     // 提取该类型栏目的文章对象列表
                     if (!bool) {
                         List<SimpleArticleItem> list = GetXmglNews.getTargetList(type, table, client, bool);
                         // 获取最大的文章ID，只有当ID大于它时，再插入文章。
                         try {
-                            maxId = (int) sampleColl.find(query).sort(sortRe).next().get("aid");
-                        } catch (NoSuchElementException e) {
+                            maxId = fullColl.find().sort(descending("aid")).first().getInteger("aid");
+                        } catch (NullPointerException e) {
                             maxId = 0;
                         }
                         // 将Java对象解析为BasicDBObject以便存入MongoDB
                         for (SimpleArticleItem item : list) {
                             if (item.getId() > maxId) {
-                                doc = new BasicDBObject
+                                doc = new Document
                                         ("aid", item.getId())
                                         .append("type", item.getType())
                                         .append("title", item.getTitle())
@@ -149,21 +150,21 @@ public class BeeNewsCrawler {
                                         .append("summary", item.getSummary())
                                         .append("imageUrls", item.getImageUrls());
 
-                                sampleColl.insert(doc);
+                                sampleColl.insertOne(doc);
                                 System.out.println(doc);
                             }
                         }
                     } else {
                         try {
-                            maxId = (int) fullColl.find(query).sort(sortRe).next().get("aid");
-                        } catch (NoSuchElementException e) {
+                            maxId = fullColl.find().sort(descending("aid")).first().getInteger("aid");
+                        } catch (NullPointerException e) {
                             maxId = 0;
                         }
                         List<ArticleItem> list = GetXmglNews.getTargetList(type, table, client, bool);
                         // 将Java对象解析为BasicDBObject以便存入MongoDB
                         for (ArticleItem item : list) {
                             if (item.getId() > maxId) {
-                                doc = new BasicDBObject
+                                doc = new Document
                                         ("aid", item.getId())
                                         .append("type", item.getType())
                                         .append("title", item.getTitle())
@@ -173,7 +174,7 @@ public class BeeNewsCrawler {
                                         .append("content", item.getBody())
                                         .append("imageUrls", item.getImageUrls());
 
-                                fullColl.insert(doc);
+                                fullColl.insertOne(doc);
                                 System.out.println(doc);
                             }
                         }
