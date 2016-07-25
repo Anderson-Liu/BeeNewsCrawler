@@ -10,6 +10,8 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -24,7 +26,7 @@ public class GetXmglNews {
     public static Elements getTables(OkHttpClient client) {
 
         // get index page
-        String url = "http://xmgl.ahau.edu.cn/";
+        String url = Constant.souceSite;
         Elements table = null;
 
         Request request
@@ -86,7 +88,7 @@ public class GetXmglNews {
         Elements urls = list.getElementsByAttribute("href");
         String url;
         List objList = new ArrayList();
-        String url_prefix = "http://xmgl.ahau.edu.cn/";
+        String url_prefix = Constant.souceSite;
         int post_id;
 
         // 如果isFull为假,获取SimpleArticle对象
@@ -147,7 +149,7 @@ public class GetXmglNews {
         String pubTime;
         // 防止作者与发布时间为空
         if (2 == author_time.length) {
-            pubTime = author_time[1];
+            pubTime = author_time[1].split("：")[1];
         } else {
             pubTime = " ";
         }
@@ -176,26 +178,27 @@ public class GetXmglNews {
         int size = imageUrlList.size();
         imageUrls = imageUrlList.toArray(new String[size]);
 
-        /*
-        // Download picture
-        String outputFolder = "/home/anderson/Pictures/BeeNews/";
-        String name = String.valueOf(post_id) + ".jpg";
+        // Upload picture to QiNiu Cloud
+        String outputFolder = Constant.imgStorePath;
+        String urlPreFix = Constant.imgGetUrlPrefix;
         if (imageUrls.length > 0) {
-            for (String imgUrl : imageUrlList) {
-                //Open a URL Stream
-                org.jsoup.Connection.Response resultImageResponse = null;
+            org.jsoup.Connection.Response resultImageResponse = null;
+            for (String imgUri : imageUrlList) {
                 try {
-                    resultImageResponse = Jsoup.connect(imgUrl).ignoreContentType(true).execute();
+                    // Get image from source web site.
+                    resultImageResponse = Jsoup.connect(urlPreFix + imgUri).ignoreContentType(true).execute();
                     // output here
-                    FileOutputStream out = (new FileOutputStream(new java.io.File(outputFolder + name)));
+                    FileOutputStream out = (new FileOutputStream(new File(outputFolder + imgUri)));
                     out.write(resultImageResponse.bodyAsBytes());  // resultImageResponse.body() is where the image's contents are.
                     out.close();
+                    // Upload to QiNiu Cloud
+                    new QiNiuUpload().upload(outputFolder + imgUri, imgUri);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
             }
         }
-        */
+
 
         String contentElem = docDetail.getElementById("zmShow").text();
         String content, summary;
@@ -237,7 +240,7 @@ public class GetXmglNews {
         String pubTime;
         // 防止作者与发布时间为空
         if (2 == author_time.length) {
-            pubTime = author_time[1];
+            pubTime = author_time[1].split("：")[1];
         } else {
             pubTime = " ";
         }
@@ -248,7 +251,6 @@ public class GetXmglNews {
         String imageUri;
         String[] imageUrls;
         List<String> imageUrlList = new ArrayList<>();
-        String imgUrlPrefix = "http://xmgl.ahau.edu.cn/";
 
         for (Element imageElement : imageElements) {
             String[] tmp = imageElement.attr("src").split("/");

@@ -1,7 +1,5 @@
 package Model;
 
-import java.util.Arrays;
-
 /**
  * model/ItemNews.java 新闻详情页面用到的完整实体类 新闻实体类 包括标题，发布日期，阅读次数，新闻主体内容等
  *
@@ -42,7 +40,7 @@ public class ArticleItem extends SimpleArticleItem {
     @Override
     public String toString() {
         return "aid->" + getId() +
-                ",\nimageUrls->" + Arrays.toString(getImageUrls()).replace("[", "").replace("]", "") +
+                ",\nimageUrls->" + getImageUrls() +
                 ",\ntitle->" + getTitle() +
                 ",\npublishDate->" + getPublishDate() +
                 ",\nsource->" + source +

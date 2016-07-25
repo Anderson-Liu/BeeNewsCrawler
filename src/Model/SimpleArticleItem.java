@@ -1,6 +1,10 @@
 package Model;
 
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
+import java.util.Date;
 
 /**
  * listview 用到的简单实体类
@@ -93,8 +97,11 @@ public class SimpleArticleItem {
         this.id = id;
     }
 
-    public String[] getImageUrls() {
-        return imageUrls;
+    public String getImageUrls() {
+        String imageUrl = Arrays.toString(imageUrls)
+                .replace("[", "")
+                .replace("]", "");
+        return imageUrl;
     }
 
     public void setImageUrls(String[] imageUrls) {
@@ -109,8 +116,15 @@ public class SimpleArticleItem {
         this.title = title;
     }
 
-    public String getPublishDate() {
-        return publishDate;
+    public Date getPublishDate() {
+        DateFormat df = new SimpleDateFormat("yyyy/MM/dd");
+        Date date = null;
+        try {
+            date = df.parse(publishDate);
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+        return date;
     }
 
     public void setPublishDate(String publishDate) {

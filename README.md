@@ -1,2 +1,2 @@
 # BeeNewsCrawler
-The Crawler that provide data to BeeNews Android app.
+The Crawler that provide data to BeeNewsCrawler Android app.
